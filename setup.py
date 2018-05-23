@@ -7,7 +7,7 @@ setup(
     packages=find_packages(),
     entry_points={
         'flake8.extension': [
-            'P66 = polarion_docstrings.docvalidate:polarion_checks492',
+            'P66 = polarion_docstrings.checker:polarion_checks492',
         ],
     },
     keywords=['polarion', 'testing'],

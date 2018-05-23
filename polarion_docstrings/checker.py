@@ -5,7 +5,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import sys
 
-from polarion_docstrings import docparser
+from polarion_docstrings import parser
 from polarion_docstrings import polarion_fields as pf
 
 
@@ -18,7 +18,7 @@ def _validate(docstring_dict, key):
 
 def _get_unknown_fields(docstring_dict):
     unknown = [(docstring_dict[key][0], docstring_dict[key][1], key) for key in docstring_dict
-               if key not in pf.CUSTOM_FIELDS]
+               if key not in pf.KNOWN_FIELDS]
     return unknown
 
 
@@ -50,23 +50,28 @@ def validate_docstring(docstring_dict):
     return unknown, invalid, missing, markers
 
 
-def get_errors(validated_docstring, docstring_dict, lineno=0, column=0):
+def get_errors(validated_docstring, docstring_dict, lineno=0, column=0, func=None):
     unknown, invalid, missing, markers = validated_docstring
     errors = []
+    func = func or polarion_checks492
+
     for num, col, field in unknown:
-        errors.append((lineno + num, col, 'P666 Unknown field "{}"'.format(field)))
+        errors.append((lineno + num, col, 'P666 Unknown field "{}"'.format(field), func))
     for num, col, field in invalid:
         errors.append((lineno + num, col, 'P667 Invalid value "{}" of the "{}" field'.format(
-            docstring_dict[field][2], field)))
+            docstring_dict[field][2], field), func))
     for num, col, field in markers:
         errors.append((
             lineno + num,
             col,
             'P668 Field "{}" should be handled by the "@pytest.mark.{}" marker'.format(
-                field, pf.MARKERS_FIELDS[field])
+                field, pf.MARKERS_FIELDS[field]),
+            func
         ))
     for field in missing:
-        errors.append((lineno, column, 'P669 Missing required field "{}"'.format(field)))
+        errors.append(
+            (lineno, column, 'P669 Missing required field "{}"'.format(field), func)
+        )
 
     if errors:
         errors = sorted(errors, key=lambda tup: tup[0])
@@ -75,7 +80,7 @@ def get_errors(validated_docstring, docstring_dict, lineno=0, column=0):
 
 def print_errors(errors):
     for err in errors:
-        print('line: {}: {}'.format(err[0], err[2]), file=sys.stderr)
+        print('line: {}:{}: {}'.format(err[0], err[1], err[2]), file=sys.stderr)
 
 
 def check_docstrings(docstrings):
@@ -87,7 +92,7 @@ def check_docstrings(docstrings):
 
 
 def run_checks(tree, filename):
-    docstrings = docparser.get_docstrings_in_file(tree, filename)
+    docstrings = parser.get_docstrings_in_file(tree, filename)
     errors = check_docstrings(docstrings)
     return errors
 

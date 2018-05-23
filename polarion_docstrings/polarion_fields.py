@@ -2,19 +2,37 @@
 # pylint: disable=missing-docstring
 
 
-CUSTOM_FIELDS = {
+POLARION_FIELDS = {
     'assignee': '',
     'initialEstimate': '',
     'caseimportance': 'high',
     'caselevel': 'component',
     'caseposneg': 'positive',
+    'caseautomation': 'automated',
     'testtype': 'functional',
     'casecomponent': '-',
     'subtype1': '-',
     'subtype2': '-',
-    'steps': '',
-    'expectedresults': '',
+    'description': '',
+    'testSteps': '',
+    'expectedResults': '',
+    'title': '',
+    'test_id': '',
 }
+
+ADDED_FIELDS = (
+    'test_id',
+    'Steps',
+    'Results',
+)
+
+KNOWN_FIELDS = tuple(POLARION_FIELDS) + ADDED_FIELDS
+
+
+MANUAL_ONLY_FIELDS = (
+    'title',
+    'test_id',
+)
 
 MARKERS_FIELDS = {
     'caselevel': 'tier',
@@ -24,7 +42,6 @@ MARKERS_FIELDS = {
 REQUIRED_FIELDS = (
     'assignee',
     'initialEstimate',
-    'caseimportance',
 )
 
 CASELEVELS = {
@@ -60,6 +77,25 @@ CASECOMPONENT_VALID = (
     'ansible',
 )
 
+CASECOMPONENT_MAP = {
+    'Cloud': 'cloud',
+    'Infra': 'infra',
+    'Services': 'services',
+    'Control': 'control',
+    'Automate': 'automate',
+    'Configuration': 'config',
+    'Appliance': 'appl',
+    'C&U': 'candu',
+    'Reporting': 'report',
+    'SmartState': 'smartst',
+    'Provisioning': 'prov',
+    'SelfServiceUI': 'ssui',
+    'Stack': 'stack',
+    'UI': 'web_ui',
+    'Optimize': 'optimize',
+    'Ansible': 'ansible',
+}
+
 CASEPOSNEG_VALID = (
     'positive',
     'negative',
@@ -67,8 +103,10 @@ CASEPOSNEG_VALID = (
 
 TESTTYPE_VALID = (
     'functional',
-    'non-functional',
+    'nonfunctional',
     'structural',
+    'integration',
+    'upgrade',
 )
 
 VALID_VALUES = {
