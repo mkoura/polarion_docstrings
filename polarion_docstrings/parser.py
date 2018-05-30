@@ -6,16 +6,20 @@ from __future__ import absolute_import, unicode_literals
 import ast
 
 
+FORMATED_KEYS = ('setup', 'teardown')
+
+
 class SECTIONS(object):
-    polarion = 'Polarion:'
-    steps = 'Steps:'
-    results = 'Results:'
+    polarion = 'Polarion'
+    steps = 'testSteps'
+    results = 'expectedResults'
 
 
-def _get_start(doc_list, string):
-    """Finds the line with "string" (e.g. "Polarion:", "Steps:", etc.)."""
+def _get_section_start(doc_list, section):
+    """Finds the line with "section" (e.g. "Polarion", "testSteps", etc.)."""
+    section = '{}:'.format(section)
     for index, line in enumerate(doc_list):
-        if string != line.strip():
+        if section != line.strip():
             continue
         indent = len(line) - len(line.lstrip(' '))
         return index + 1, indent
@@ -43,9 +47,10 @@ def _lines_to_dict(lines, start=0, lineno_offset=0, stop=None):
 
         word = line_stripped.split(' ')[0] or line_stripped
         if prev_key and curr_indent > indent and word[-1] != ':':
+            sep = '\n' if prev_key in FORMATED_KEYS else ' '
             prev_lineno, prev_indent, prev_value = lines_dict[prev_key]
             lines_dict[prev_key] = (
-                prev_lineno, prev_indent, '{} {}'.format(prev_value, line_stripped))
+                prev_lineno, prev_indent, '{}{}{}'.format(prev_value, sep, line_stripped))
             continue
         else:
             prev_key = None
@@ -57,6 +62,8 @@ def _lines_to_dict(lines, start=0, lineno_offset=0, stop=None):
             data.append('')
         key = data[0].strip()
         value = ':'.join(data[1:]).strip()
+        if value == 'None':
+            value = None
         lines_dict[key] = num + lineno_offset, indent, value
         prev_key = key
 
@@ -98,38 +105,43 @@ def parse_docstring(docstring):
 
     Polarion:
         assignee: mkourim
-        Steps:
+        testSteps:
             1. Step with really long description
                that doesn't fit into one line
             2. Do that
-        Results:
+        expectedResults:
             1. Success outcome with really long description
                that doesn't fit into one line
             2. 2
         caseimportance: low
         title: Some test with really long description
                that doesn't fit into one line
+        setup: Do this:
+               - first thing
+               - second thing
         foo: this is an unknown field
 
     This is not included.
     """
     doc_list = docstring.split('\n')
 
-    polarion_start, __ = _get_start(doc_list, SECTIONS.polarion)
+    polarion_start, __ = _get_section_start(doc_list, SECTIONS.polarion)
     if not polarion_start:
         return None
 
     docstring_dict = _lines_to_dict(doc_list, start=polarion_start)
-    if 'steps' in docstring_dict and not docstring_dict['steps'][2]:
-        steps_start, __ = _get_start(doc_list, SECTIONS.steps)
+    if SECTIONS.steps in docstring_dict and docstring_dict[SECTIONS.steps][2]:
+        steps_start, __ = _get_section_start(doc_list, SECTIONS.steps)
         steps_list = _lines_to_list(
             doc_list, start=steps_start, lineno_offset=steps_start - polarion_start)
-        docstring_dict['steps'] = steps_list
-    if 'expectedresults' in docstring_dict and not docstring_dict['expectedresults'][2]:
-        results_start, __ = _get_start(doc_list, SECTIONS.results)
+        docstring_dict[SECTIONS.steps] = steps_list
+        del docstring_dict[SECTIONS.steps]
+    if SECTIONS.results in docstring_dict and docstring_dict[SECTIONS.results][2]:
+        results_start, __ = _get_section_start(doc_list, SECTIONS.results)
         results_list = _lines_to_list(
             doc_list, start=results_start, lineno_offset=results_start - polarion_start)
-        docstring_dict['expectedresults'] = results_list
+        docstring_dict[SECTIONS.results] = results_list
+        del docstring_dict[SECTIONS.results]
 
     return docstring_dict
 
@@ -159,7 +171,7 @@ def get_docstrings_in_file(tree, filename):
         except Exception:
             continue
         doc_list = docstring.split('\n')
-        polarion_start, polarion_column = _get_start(doc_list, SECTIONS.polarion)
+        polarion_start, polarion_column = _get_section_start(doc_list, SECTIONS.polarion)
         if not polarion_start:
             continue
         docstring_start = node.body[0].lineno - len(doc_list)

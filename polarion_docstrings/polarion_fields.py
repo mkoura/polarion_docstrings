@@ -13,30 +13,49 @@ POLARION_FIELDS = {
     'casecomponent': '-',
     'subtype1': '-',
     'subtype2': '-',
+    'tags': '',
+    'setup': '',
+    'teardown': '',
     'description': '',
+    'linkedWorkItems': '',
     'testSteps': '',
     'expectedResults': '',
     'title': '',
-    'test_id': '',
 }
 
 ADDED_FIELDS = (
-    'test_id',
-    'Steps',
-    'Results',
+    'work_item_id',
 )
 
 KNOWN_FIELDS = tuple(POLARION_FIELDS) + ADDED_FIELDS
 
 
+CUSTOM_FIELDS = (
+    'caseautomation',
+    'caseimportance',
+    'caselevel',
+    'caseposneg',
+    'testtype',
+    'casecomponent',
+    'subtype1',
+    'subtype2',
+    'tags',
+    'setup',
+    'teardown',
+)
+
 MANUAL_ONLY_FIELDS = (
     'title',
-    'test_id',
+    'setup',
+    'teardown',
+    'testSteps',
+    'expectedResults',
 )
 
 MARKERS_FIELDS = {
     'caselevel': 'tier',
     'caseautomation': 'manual',
+    'linkedWorkItems': 'requirements',
 }
 
 REQUIRED_FIELDS = (
